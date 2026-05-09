@@ -1,0 +1,19 @@
+@import "tailwindcss";
+
+@custom-variant dark (&:is(.dark *));
+
+/* base reset */
+html, body {
+  height: 100%;
+  margin: 0;
+}
+
+/* default light theme */
+body {
+  @apply bg-gray-50 text-gray-900 transition-colors duration-300;
+}
+
+/* dark theme */
+.dark body {
+  @apply bg-gray-900 text-white;
+}
