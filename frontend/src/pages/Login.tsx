@@ -1,54 +1,41 @@
-import { useNavigate } from "react-router-dom";
 import { useState } from "react";
+import { useNavigate } from "react-router-dom";
+import { useAuth } from "../context/AuthContext";
 
 export default function Login() {
-  const navigate = useNavigate();
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
+
+  const navigate = useNavigate();
+  const { login } = useAuth();
 
   const handleLogin = (e) => {
     e.preventDefault();
 
-    // (frontend-only fake login for now)
-    if (email && password) {
-      navigate("/dashboard");
-    }
+    login(email); // fake login
+    navigate("/dashboard");
   };
 
   return (
-    <div className="h-screen flex items-center justify-center bg-gray-100">
-
-      <form
-        onSubmit={handleLogin}
-        className="bg-white p-6 rounded shadow w-80"
-      >
-
-        <h2 className="text-xl font-bold mb-4">Login</h2>
-
+    <div className="flex items-center justify-center h-screen">
+      <form onSubmit={handleLogin} className="p-6 bg-white shadow rounded">
         <input
-          className="w-full p-2 border mb-3"
+          className="border p-2 mb-2 w-full"
           placeholder="Email"
-          value={email}
           onChange={(e) => setEmail(e.target.value)}
         />
 
         <input
-          className="w-full p-2 border mb-3"
           type="password"
+          className="border p-2 mb-2 w-full"
           placeholder="Password"
-          value={password}
           onChange={(e) => setPassword(e.target.value)}
         />
 
-        <button
-          className="w-full bg-indigo-600 text-white p-2 rounded"
-          type="submit"
-        >
+        <button className="bg-blue-500 text-white px-4 py-2 w-full">
           Login
         </button>
-
       </form>
-
     </div>
   );
 }
