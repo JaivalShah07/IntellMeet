@@ -13,8 +13,9 @@
     "isolatedModules": true,
     "noEmit": true,
 
+    "allowJs": true,
     "jsx": "react-jsx",
-    "strict": true
+    "strict": false
   },
-  "include": ["src"]
+  "include": ["frontend/src"]
 }

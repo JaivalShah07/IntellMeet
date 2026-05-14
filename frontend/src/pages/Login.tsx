@@ -1,41 +1,41 @@
-import { useState } from "react";
 import { useNavigate } from "react-router-dom";
 import { useAuth } from "../context/AuthContext";
 
 export default function Login() {
-  const [email, setEmail] = useState("");
-  const [password, setPassword] = useState("");
-
   const navigate = useNavigate();
   const { login } = useAuth();
 
-  const handleLogin = (e) => {
-    e.preventDefault();
-
-    login(email); // fake login
+  const handleLogin = () => {
+    login();
     navigate("/dashboard");
   };
 
   return (
-    <div className="flex items-center justify-center h-screen">
-      <form onSubmit={handleLogin} className="p-6 bg-white shadow rounded">
+    <div className="min-h-screen flex items-center justify-center bg-gray-100 dark:bg-gray-950">
+      <div className="w-full max-w-md bg-white dark:bg-gray-900 p-8 rounded-2xl shadow-xl border border-gray-200 dark:border-gray-700">
+        <h1 className="text-3xl font-bold mb-6 text-center">
+          Welcome Back
+        </h1>
+
         <input
-          className="border p-2 mb-2 w-full"
+          type="email"
           placeholder="Email"
-          onChange={(e) => setEmail(e.target.value)}
+          className="w-full p-3 rounded-lg border border-gray-300 dark:border-gray-600 mb-4 bg-white dark:bg-gray-800"
         />
 
         <input
           type="password"
-          className="border p-2 mb-2 w-full"
           placeholder="Password"
-          onChange={(e) => setPassword(e.target.value)}
+          className="w-full p-3 rounded-lg border border-gray-300 dark:border-gray-600 mb-6 bg-white dark:bg-gray-800"
         />
 
-        <button className="bg-blue-500 text-white px-4 py-2 w-full">
+        <button
+          onClick={handleLogin}
+          className="w-full bg-blue-600 text-white py-3 rounded-lg hover:bg-blue-700 transition"
+        >
           Login
         </button>
-      </form>
+      </div>
     </div>
   );
 }

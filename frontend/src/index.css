@@ -1,24 +1,13 @@
 @import "tailwindcss";
 
-@custom-variant dark (&:is(.dark *));
-
-/* base reset */
-html, body {
-  height: 100%;
+html,
+body,
+#root {
   margin: 0;
-}
-
-/* default light theme */
-body {
-  @apply bg-gray-50 text-gray-900 transition-colors duration-300;
-}
-
-/* dark theme */
-.dark body {
-  @apply bg-gray-900 text-white;
+  padding: 0;
+  min-height: 100%;
 }
 
 body {
-  background-color: #f9fafb;
-  font-family: Inter, system-ui, sans-serif;
+  font-family: Inter, sans-serif;
 }
