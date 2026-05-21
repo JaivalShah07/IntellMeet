@@ -1,33 +1,109 @@
+import { useState } from "react";
+import { useNavigate, Link, Navigate } from "react-router-dom";
+import { Sparkles, Loader2 } from "lucide-react";
+import AuthLayout from "../components/AuthLayout";
+import { useAuth } from "../context/AuthContext";
+
 export default function Signup() {
+  const [name, setName] = useState("");
+  const [email, setEmail] = useState("");
+  const [password, setPassword] = useState("");
+  const [error, setError] = useState("");
+  const [submitting, setSubmitting] = useState(false);
+
+  const navigate = useNavigate();
+  const { user, register } = useAuth();
+
+  if (user) {
+    return <Navigate to="/dashboard" replace />;
+  }
+
+  const handleSignup = async (e: React.FormEvent) => {
+    e.preventDefault();
+    setError("");
+    setSubmitting(true);
+    try {
+      await register(name.trim(), email.trim(), password);
+      navigate("/dashboard", { replace: true });
+    } catch (err: unknown) {
+      const msg =
+        (err as { response?: { data?: { message?: string } } })?.response?.data
+          ?.message || "Signup failed. Try a different email.";
+      setError(msg);
+    } finally {
+      setSubmitting(false);
+    }
+  };
+
   return (
-    <div className="min-h-screen flex items-center justify-center bg-gray-100 dark:bg-gray-950">
-      <div className="w-full max-w-md bg-white dark:bg-gray-900 p-8 rounded-2xl shadow-xl border border-gray-200 dark:border-gray-700">
-        <h1 className="text-3xl font-bold mb-6 text-center">
-          Create Account
-        </h1>
+    <AuthLayout
+      title="Join IntellMeet"
+      subtitle="Create your account — built for enterprise teams."
+    >
+      <form onSubmit={handleSignup} className="space-y-5">
+        {error && (
+          <p className="text-sm text-amber-800 dark:text-amber-200 bg-amber-50 dark:bg-amber-500/15 px-4 py-3 rounded-xl">
+            {error}
+          </p>
+        )}
 
-        <input
-          type="text"
-          placeholder="Name"
-          className="w-full p-3 rounded-lg border border-gray-300 dark:border-gray-600 mb-4 bg-white dark:bg-gray-800"
-        />
+        <div>
+          <label className="block text-sm font-medium mb-1.5">Full name</label>
+          <input
+            type="text"
+            value={name}
+            onChange={(e) => setName(e.target.value)}
+            className="w-full p-4 rounded-xl border border-gray-200 dark:border-gray-700 bg-white dark:bg-gray-900/80 focus:ring-2 focus:ring-sky-500 outline-none"
+            required
+          />
+        </div>
 
-        <input
-          type="email"
-          placeholder="Email"
-          className="w-full p-3 rounded-lg border border-gray-300 dark:border-gray-600 mb-4 bg-white dark:bg-gray-800"
-        />
+        <div>
+          <label className="block text-sm font-medium mb-1.5">Email</label>
+          <input
+            type="email"
+            value={email}
+            onChange={(e) => setEmail(e.target.value)}
+            className="w-full p-4 rounded-xl border border-gray-200 dark:border-gray-700 bg-white dark:bg-gray-900/80 focus:ring-2 focus:ring-sky-500 outline-none"
+            required
+          />
+        </div>
 
-        <input
-          type="password"
-          placeholder="Password"
-          className="w-full p-3 rounded-lg border border-gray-300 dark:border-gray-600 mb-6 bg-white dark:bg-gray-800"
-        />
+        <div>
+          <label className="block text-sm font-medium mb-1.5">Password</label>
+          <input
+            type="password"
+            value={password}
+            onChange={(e) => setPassword(e.target.value)}
+            minLength={6}
+            className="w-full p-4 rounded-xl border border-gray-200 dark:border-gray-700 bg-white dark:bg-gray-900/80 focus:ring-2 focus:ring-sky-500 outline-none"
+            required
+          />
+        </div>
 
-        <button className="w-full bg-blue-600 text-white py-3 rounded-lg hover:bg-blue-700 transition">
-          Signup
+        <button
+          type="submit"
+          disabled={submitting}
+          className="btn-primary w-full py-4 rounded-xl font-bold inline-flex items-center justify-center gap-2 disabled:opacity-70"
+        >
+          {submitting ? (
+            <>
+              <Loader2 className="w-5 h-5 animate-spin" /> Creating account...
+            </>
+          ) : (
+            <>
+              <Sparkles className="w-5 h-5" /> Start your journey
+            </>
+          )}
         </button>
-      </div>
-    </div>
+      </form>
+
+      <p className="mt-6 text-center text-sm text-gray-500">
+        Already with us?{" "}
+        <Link to="/login" className="text-sky-600 font-semibold hover:underline">
+          Sign in
+        </Link>
+      </p>
+    </AuthLayout>
   );
 }

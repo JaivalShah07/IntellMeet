@@ -1,39 +1,72 @@
-import { Link, useNavigate } from "react-router-dom";
-import { useAuth } from "../context/AuthContext";
+import { Routes, Route } from "react-router-dom";
 
-export default function Navbar() {
-  const { user, logout } = useAuth();
-  const navigate = useNavigate();
+import Home from "../pages/Home";
+import Login from "../pages/Login";
+import Signup from "../pages/Signup";
+import Dashboard from "../pages/Dashboard";
+import MeetingRoom from "../pages/MeetingRoom";
+import Analytics from "../pages/Analytics";
+import AIInsights from "../pages/AIInsights";
+import Kanban from "../pages/Kanban";
 
-  const handleLogout = () => {
-    logout();
-    navigate("/login");
-  };
+import ProtectedRoute from "../components/ProtectedRoute";
+import DashboardLayout from "../layouts/DashboardLayout";
 
+function DashboardPage({ children }: { children: React.ReactNode }) {
   return (
-    <nav className="flex justify-between items-center p-4 shadow bg-white">
-      <Link to="/" className="font-bold text-xl">
-        IntellMeet
-      </Link>
+    <ProtectedRoute>
+      <DashboardLayout>{children}</DashboardLayout>
+    </ProtectedRoute>
+  );
+}
 
-      <div className="flex gap-4 items-center">
-        {user ? (
-          <>
-            <Link to="/dashboard">Dashboard</Link>
-            <button
-              onClick={handleLogout}
-              className="bg-red-500 text-white px-3 py-1 rounded"
-            >
-              Logout
-            </button>
-          </>
-        ) : (
-          <>
-            <Link to="/login">Login</Link>
-            <Link to="/signup">Signup</Link>
-          </>
-        )}
-      </div>
-    </nav>
+export default function AppRoutes() {
+  return (
+    <Routes>
+      <Route path="/" element={<Home />} />
+      <Route path="/login" element={<Login />} />
+      <Route path="/signup" element={<Signup />} />
+
+      <Route
+        path="/dashboard"
+        element={
+          <DashboardPage>
+            <Dashboard />
+          </DashboardPage>
+        }
+      />
+      <Route
+        path="/analytics"
+        element={
+          <DashboardPage>
+            <Analytics />
+          </DashboardPage>
+        }
+      />
+      <Route
+        path="/insights"
+        element={
+          <DashboardPage>
+            <AIInsights />
+          </DashboardPage>
+        }
+      />
+      <Route
+        path="/kanban"
+        element={
+          <DashboardPage>
+            <Kanban />
+          </DashboardPage>
+        }
+      />
+      <Route
+        path="/meeting"
+        element={
+          <ProtectedRoute>
+            <MeetingRoom />
+          </ProtectedRoute>
+        }
+      />
+    </Routes>
   );
 }

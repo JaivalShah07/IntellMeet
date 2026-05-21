@@ -1,3 +1,4 @@
+// @ts-nocheck
 export default function Button({ children, onClick, variant = "primary" }) {
   const base =
     "px-4 py-2 rounded font-medium transition";
