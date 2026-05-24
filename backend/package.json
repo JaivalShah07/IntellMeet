@@ -1,0 +1,28 @@
+{
+  "name": "intellmeet-server",
+  "version": "1.0.0",
+  "description": "IntellMeet API — enterprise meeting & collaboration platform",
+  "main": "src/server.js",
+  "scripts": {
+    "dev": "node --watch server.js",
+    "start": "node server.js"
+  },
+  "type": "commonjs",
+  "dependencies": {
+    "@google/genai": "^2.6.0",
+    "bcryptjs": "^3.0.2",
+    "cors": "^2.8.6",
+    "dotenv": "^17.4.2",
+    "express": "^5.2.1",
+    "express-rate-limit": "^7.5.0",
+    "google-auth-library": "^10.6.2",
+    "helmet": "^8.1.0",
+    "jsonwebtoken": "^9.0.2",
+    "mongodb-memory-server": "^10.4.3",
+    "mongoose": "^9.6.1",
+    "morgan": "^1.10.0",
+    "socket.io": "^4.8.3",
+    "uuid": "^11.1.0",
+    "zod": "^4.4.3"
+  }
+}
