@@ -23,6 +23,22 @@ const CLIENT_URL = process.env.CLIENT_URL || "http://localhost:5173";
 async function start() {
   await connectDB();
 
+  // Auto-seed in-memory database if empty
+  if (process.env.USE_MEMORY_DB === "true" || !process.env.MONGODB_URI) {
+    try {
+      const User = require("./models/user.model");
+      const userCount = await User.countDocuments();
+      if (userCount === 0) {
+        console.log("In-memory database is empty. Auto-seeding initial data...");
+        const seed = require("./seed");
+        // Remove process.exit from seed by calling the exported function
+        await seed();
+      }
+    } catch (seedErr) {
+      console.warn("Auto-seeding skipped or failed:", seedErr.message);
+    }
+  }
+
   const app = express();
   const server = http.createServer(app);
 

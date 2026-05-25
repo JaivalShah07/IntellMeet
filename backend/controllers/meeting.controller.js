@@ -5,9 +5,11 @@ const Team = require("../models/team.model");
 
 const createMeetingSchema = z.object({
   title: z.string().trim().min(1, "Title is required"),
-  scheduledAt: z.string().datetime().optional().or(z.date().optional()),
+  description: z.string().trim().optional(),
+  scheduledAt: z.string().optional().or(z.date().optional()),
   type: z.enum(["Video", "Presentation", "External", "Standup"]).optional(),
   durationMinutes: z.number().min(1).max(480).optional(),
+  participants: z.array(z.string()).optional(),
 });
 
 const updateStatusSchema = z.object({
@@ -22,6 +24,7 @@ exports.getMeetings = async (req, res, next) => {
     })
       .sort({ scheduledAt: 1 })
       .populate("host", "name email")
+      .populate("participants", "name email avatar")
       .limit(50);
     res.json({ success: true, meetings });
   } catch (err) {
@@ -76,16 +79,26 @@ exports.createMeeting = async (req, res, next) => {
     if (!parsed.success) {
       return res.status(400).json({ success: false, message: parsed.error.errors[0].message });
     }
-    const { title, scheduledAt, type, durationMinutes } = parsed.data;
+    const { title, description, scheduledAt, type, durationMinutes, participants } = parsed.data;
+
+    const participantIds = [req.user._id];
+    if (participants && Array.isArray(participants)) {
+      participants.forEach((id) => {
+        if (id && !participantIds.includes(id)) {
+          participantIds.push(id);
+        }
+      });
+    }
 
     const meeting = await Meeting.create({
       title,
+      description: description || "",
       host: req.user._id,
       roomId: uuidv4().slice(0, 8),
       scheduledAt: scheduledAt ? new Date(scheduledAt) : new Date(),
       type: type || "Video",
       durationMinutes: durationMinutes || 60,
-      participants: [req.user._id],
+      participants: participantIds,
     });
     res.status(201).json({ success: true, meeting });
   } catch (err) {

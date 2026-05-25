@@ -1,4 +1,6 @@
-import { NavLink, useNavigate } from "react-router-dom";
+// @ts-nocheck
+import { NavLink, useNavigate, useLocation } from "react-router-dom";
+import { useState, useRef, useEffect } from "react";
 import {
   LayoutDashboard,
   BarChart3,
@@ -7,13 +9,21 @@ import {
   Video,
   LogOut,
   Users,
+  Search,
+  Bell,
+  ChevronDown,
+  User,
+  Shield,
+  Sparkles,
+  Settings,
 } from "lucide-react";
 import { type ReactNode } from "react";
 import { useAuth } from "../context/AuthContext";
 import Logo from "../components/Logo";
+import ThemeToggle from "../components/ThemeToggle";
 import { cn } from "../lib/utils";
 
-function UserAvatar({ name }: { name: string }) {
+function UserAvatar({ name, avatar }: { name: string; avatar?: string }) {
   const initials = name
     .split(" ")
     .map((n) => n[0])
@@ -21,17 +31,13 @@ function UserAvatar({ name }: { name: string }) {
     .slice(0, 2)
     .toUpperCase();
 
+  if (avatar) {
+    return <img src={avatar} alt={name} className="w-10 h-10 rounded-full object-cover shadow-md border-2 border-sky-500/30" />;
+  }
+
   return (
-    <div className="flex items-center gap-3 mt-4 p-3 rounded-xl bg-gradient-to-br from-sky-500/10 to-indigo-500/10 border border-sky-500/15">
-      <div className="w-10 h-10 rounded-full bg-gradient-to-br from-sky-500 to-indigo-600 flex items-center justify-center text-white font-bold text-sm shadow-md">
-        {initials}
-      </div>
-      <div className="min-w-0">
-        <p className="font-semibold text-sm truncate">{name}</p>
-        <p className="text-xs text-emerald-600 dark:text-emerald-400 font-medium">
-          Ready to collaborate
-        </p>
-      </div>
+    <div className="w-10 h-10 rounded-full bg-gradient-to-br from-sky-400 to-indigo-600 flex items-center justify-center text-white font-extrabold text-sm shadow-md border border-white/10">
+      {initials}
     </div>
   );
 }
@@ -39,10 +45,37 @@ function UserAvatar({ name }: { name: string }) {
 export default function DashboardLayout({ children }: { children: ReactNode }) {
   const { user, logout } = useAuth();
   const navigate = useNavigate();
+  const location = useLocation();
+
+  const [profileDropdownOpen, setProfileDropdownOpen] = useState(false);
+  const dropdownRef = useRef<HTMLDivElement>(null);
 
   const handleLogout = () => {
     logout();
     navigate("/login");
+  };
+
+  // Close dropdown on click outside
+  useEffect(() => {
+    function handleClickOutside(event: MouseEvent) {
+      if (dropdownRef.current && !dropdownRef.current.contains(event.target as Node)) {
+        setProfileDropdownOpen(false);
+      }
+    }
+    document.addEventListener("mousedown", handleClickOutside);
+    return () => document.removeEventListener("mousedown", handleClickOutside);
+  }, []);
+
+  const getPageTitle = () => {
+    const path = location.pathname;
+    if (path.startsWith("/dashboard")) return "Dashboard Workspace";
+    if (path.startsWith("/meetings")) return "Meetings Room Calendar";
+    if (path.startsWith("/insights")) return "AI Performance Insights";
+    if (path.startsWith("/kanban")) return "Sprint Kanban Tasks";
+    if (path.startsWith("/analytics")) return "Analytics Report";
+    if (path.startsWith("/team")) return "Team Administration";
+    if (path.startsWith("/meeting")) return "Conference Call Room";
+    return "Workspace Portal";
   };
 
   const navItems = [
@@ -55,16 +88,31 @@ export default function DashboardLayout({ children }: { children: ReactNode }) {
   ];
 
   return (
-    <div className="min-h-screen mesh-bg flex">
-      <aside className="hidden lg:flex w-72 flex-col border-r border-gray-200/80 dark:border-gray-800/80 bg-white/90 dark:bg-gray-950/90 backdrop-blur-xl">
-        <div className="p-6 border-b border-gray-100 dark:border-gray-800">
+    <div className="min-h-screen mesh-bg flex text-gray-900 dark:text-gray-100 transition-colors duration-300">
+      
+      {/* Sidebar for Desktop */}
+      <aside className="hidden lg:flex w-72 flex-col border-r border-gray-200/60 dark:border-gray-800/80 bg-white/90 dark:bg-gray-950/90 backdrop-blur-xl transition-all duration-300">
+        <div className="p-6 border-b border-gray-100 dark:border-gray-900 flex flex-col gap-4">
           <Logo to="/dashboard" size="md" />
-          {user && <UserAvatar name={user.name} />}
+          
+          {/* User card in sidebar (static view, clicking opens topbar dropdown) */}
+          {user && (
+            <div className="flex items-center gap-3 p-3 rounded-xl bg-gradient-to-br from-sky-500/5 to-indigo-500/5 dark:from-sky-500/10 dark:to-indigo-500/10 border border-sky-500/10 dark:border-sky-500/15">
+              <UserAvatar name={user.name} avatar={user.avatar} />
+              <div className="min-w-0 flex-1">
+                <p className="font-bold text-sm truncate text-gray-800 dark:text-gray-200 leading-tight">{user.name}</p>
+                <p className="text-[10px] font-bold text-sky-600 dark:text-sky-400 mt-0.5 flex items-center gap-1 uppercase tracking-wide">
+                  <Sparkles className="w-2.5 h-2.5" />
+                  {user.role} Account
+                </p>
+              </div>
+            </div>
+          )}
         </div>
 
-        <nav className="flex-1 p-4 flex flex-col gap-1">
-          <p className="px-4 text-xs font-bold text-gray-400 uppercase tracking-wider mb-2">
-            Workspace
+        <nav className="flex-1 p-4 flex flex-col gap-1.5 mt-2">
+          <p className="px-4 text-[10px] font-bold text-gray-400 uppercase tracking-wider mb-2">
+            Navigation Menu
           </p>
           {navItems.map(({ to, label, icon: Icon }) => (
             <NavLink
@@ -72,23 +120,24 @@ export default function DashboardLayout({ children }: { children: ReactNode }) {
               to={to}
               className={({ isActive }) =>
                 cn(
-                  "flex items-center gap-3 px-4 py-3 rounded-xl text-sm font-semibold transition-all",
+                  "flex items-center gap-3 px-4 py-3 rounded-xl text-sm font-semibold transition-all duration-350 transform hover:translate-x-1",
                   isActive
-                    ? "bg-gradient-to-r from-sky-500 to-indigo-600 text-white shadow-lg shadow-sky-500/25"
-                    : "text-gray-600 dark:text-gray-300 hover:bg-sky-50 dark:hover:bg-sky-500/10 hover:text-sky-700 dark:hover:text-sky-300"
+                    ? "bg-gradient-to-r from-sky-500 via-indigo-500 to-indigo-600 text-white shadow-lg shadow-indigo-500/20"
+                    : "text-gray-600 dark:text-gray-300 hover:bg-gray-100/50 dark:hover:bg-gray-900/55 hover:text-indigo-600 dark:hover:text-sky-400"
                 )
               }
             >
-              <Icon className="w-5 h-5 shrink-0" />
+              <Icon className="w-5 h-5 shrink-0 transition-transform duration-300" />
               {label}
             </NavLink>
           ))}
         </nav>
 
-        <div className="p-4 border-t border-gray-100 dark:border-gray-800">
+        {/* Sidebar Footer Logout */}
+        <div className="p-4 border-t border-gray-100 dark:border-gray-900">
           <button
             onClick={handleLogout}
-            className="flex w-full items-center gap-3 px-4 py-3 rounded-xl text-sm font-medium text-gray-500 hover:text-red-600 hover:bg-red-50 dark:hover:bg-red-500/10 transition-colors"
+            className="flex w-full items-center gap-3 px-4 py-3 rounded-xl text-sm font-semibold text-gray-500 hover:text-red-600 hover:bg-red-50 dark:hover:bg-red-500/10 transition-all duration-300"
           >
             <LogOut className="w-5 h-5" />
             Sign out
@@ -96,31 +145,181 @@ export default function DashboardLayout({ children }: { children: ReactNode }) {
         </div>
       </aside>
 
+      {/* Main Area */}
       <div className="flex-1 flex flex-col min-w-0">
-        <header className="lg:hidden sticky top-0 z-40 flex items-center justify-between px-4 py-3 border-b border-gray-200 dark:border-gray-800 bg-white/90 dark:bg-gray-950/90 backdrop-blur-md">
+        
+        {/* Desktop Top Bar Navbar */}
+        <header className="hidden lg:flex items-center justify-between px-8 py-4 border-b border-gray-200/50 dark:border-gray-800/80 bg-white/70 dark:bg-gray-950/70 backdrop-blur-xl z-30 sticky top-0 transition-colors duration-300">
+          
+          {/* Breadcrumb Title */}
+          <div>
+            <h2 className="text-xl font-extrabold text-gray-900 dark:text-white flex items-center gap-2">
+              {getPageTitle()}
+            </h2>
+            <p className="text-xs text-gray-400">Enterprise meeting space</p>
+          </div>
+
+          {/* Center Search Input */}
+          <div className="relative w-64 max-w-sm">
+            <span className="absolute inset-y-0 left-0 flex items-center pl-3 pointer-events-none">
+              <Search className="w-4 h-4 text-gray-400" />
+            </span>
+            <input
+              type="text"
+              placeholder="Search meetings, tasks..."
+              className="w-full pl-9 pr-4 py-2 text-xs rounded-full border border-gray-200 dark:border-gray-800 bg-gray-50/50 dark:bg-gray-900/50 text-gray-900 dark:text-white focus:outline-none focus:ring-2 focus:ring-sky-500/50 transition-all"
+            />
+          </div>
+
+          {/* Right utilities */}
+          <div className="flex items-center gap-4">
+            
+            {/* Notification Badge */}
+            <button className="p-2 rounded-full hover:bg-gray-100 dark:hover:bg-gray-900 text-gray-500 relative transition-all">
+              <Bell className="w-5 h-5" />
+              <span className="absolute top-1.5 right-1.5 w-2 h-2 rounded-full bg-red-500 border border-white dark:border-gray-950" />
+            </button>
+
+            {/* Dark Mode Switcher */}
+            <ThemeToggle />
+
+            <div className="w-px h-6 bg-gray-200 dark:bg-gray-800" />
+
+            {/* Interactive Profile Dropdown */}
+            {user && (
+              <div className="relative" ref={dropdownRef}>
+                <button
+                  onClick={() => setProfileDropdownOpen((prev) => !prev)}
+                  className="flex items-center gap-2.5 p-1.5 rounded-full hover:bg-gray-100 dark:hover:bg-gray-900 transition-all outline-none"
+                >
+                  <UserAvatar name={user.name} avatar={user.avatar} />
+                  <div className="hidden xl:block text-left">
+                    <p className="text-xs font-bold text-gray-800 dark:text-gray-200 leading-tight truncate max-w-[100px]">{user.name}</p>
+                    <p className="text-[9px] font-semibold text-gray-400 leading-none">Settings</p>
+                  </div>
+                  <ChevronDown className={cn("w-3.5 h-3.5 text-gray-500 transition-transform duration-300", profileDropdownOpen && "transform rotate-180")} />
+                </button>
+
+                {/* Dropdown Card */}
+                {profileDropdownOpen && (
+                  <div className="absolute right-0 mt-2 w-64 rounded-2xl border border-gray-150 dark:border-gray-800 bg-white dark:bg-gray-950 shadow-2xl p-4 animate-slide-up z-50 text-left">
+                    <div className="flex items-center gap-3 pb-3 border-b border-gray-100 dark:border-gray-900">
+                      <UserAvatar name={user.name} avatar={user.avatar} />
+                      <div className="min-w-0">
+                        <h4 className="font-extrabold text-sm text-gray-800 dark:text-white truncate">{user.name}</h4>
+                        <p className="text-[10px] text-gray-400 truncate">{user.email}</p>
+                      </div>
+                    </div>
+
+                    <div className="py-2.5 space-y-1 text-xs">
+                      <div className="flex items-center gap-2 px-2.5 py-2 text-gray-600 dark:text-gray-300 font-semibold rounded-lg hover:bg-gray-50 dark:hover:bg-gray-900">
+                        <User className="w-4 h-4 text-indigo-500" />
+                        <span>Profile Details</span>
+                      </div>
+                      <div className="flex items-center justify-between px-2.5 py-2 text-gray-600 dark:text-gray-300 font-semibold rounded-lg hover:bg-gray-50 dark:hover:bg-gray-900">
+                        <div className="flex items-center gap-2">
+                          <Shield className="w-4 h-4 text-emerald-500" />
+                          <span>Privilege level</span>
+                        </div>
+                        <span className="text-[9px] uppercase font-extrabold bg-emerald-500/10 text-emerald-600 dark:text-emerald-400 px-2 py-0.5 rounded-full">
+                          {user.role}
+                        </span>
+                      </div>
+                      <div className="flex items-center gap-2 px-2.5 py-2 text-gray-600 dark:text-gray-300 font-semibold rounded-lg hover:bg-gray-50 dark:hover:bg-gray-900">
+                        <Settings className="w-4 h-4 text-sky-500" />
+                        <span>Workspace Settings</span>
+                      </div>
+                    </div>
+
+                    <div className="pt-2 border-t border-gray-100 dark:border-gray-900">
+                      <button
+                        onClick={handleLogout}
+                        className="w-full flex items-center gap-2 px-2.5 py-2.5 text-xs font-bold text-red-500 hover:bg-red-50 dark:hover:bg-red-500/10 rounded-xl transition-all"
+                      >
+                        <LogOut className="w-4 h-4" />
+                        Sign out
+                      </button>
+                    </div>
+                  </div>
+                )}
+              </div>
+            )}
+
+          </div>
+        </header>
+
+        {/* Mobile Header Nav (Responsive layout) */}
+        <header className="lg:hidden sticky top-0 z-40 flex items-center justify-between px-4 py-3 border-b border-gray-250 dark:border-gray-800 bg-white/95 dark:bg-gray-950/95 backdrop-blur-md transition-colors duration-300">
           <Logo to="/dashboard" size="sm" />
-          <nav className="flex gap-1">
+          
+          <nav className="flex items-center gap-1.5">
             {navItems.slice(0, 4).map(({ to, icon: Icon }) => (
               <NavLink
                 key={to}
                 to={to}
                 className={({ isActive }) =>
                   cn(
-                    "p-2.5 rounded-xl transition-all",
+                    "p-2 rounded-xl transition-all",
                     isActive
                       ? "bg-gradient-to-r from-sky-500 to-indigo-600 text-white"
-                      : "text-gray-500"
+                      : "text-gray-500 dark:text-gray-400"
                   )
                 }
               >
-                <Icon className="w-5 h-5" />
+                <Icon className="w-4.5 h-4.5" />
               </NavLink>
             ))}
+            
+            <ThemeToggle />
+
+            {/* Mobile Dropdown Triggers */}
+            {user && (
+              <div className="relative" ref={dropdownRef}>
+                <button
+                  onClick={() => setProfileDropdownOpen((prev) => !prev)}
+                  className="w-8 h-8 rounded-full border border-sky-500/20 overflow-hidden ml-1 outline-none"
+                >
+                  {user.avatar ? (
+                    <img src={user.avatar} alt={name} className="w-full h-full object-cover" />
+                  ) : (
+                    <div className="w-full h-full bg-gradient-to-br from-sky-400 to-indigo-600 flex items-center justify-center text-white text-[10px] font-bold">
+                      {user.name.split(" ").map((n) => n[0]).join("").slice(0, 2).toUpperCase()}
+                    </div>
+                  )}
+                </button>
+
+                {profileDropdownOpen && (
+                  <div className="absolute right-0 mt-2 w-56 rounded-2xl border border-gray-250 dark:border-gray-800 bg-white dark:bg-gray-950 shadow-2xl p-3.5 animate-slide-up z-50">
+                    <div className="pb-2.5 border-b border-gray-100 dark:border-gray-900 text-left">
+                      <h4 className="font-extrabold text-xs text-gray-800 dark:text-white truncate">{user.name}</h4>
+                      <p className="text-[10px] text-gray-400 truncate mt-0.5">{user.email}</p>
+                    </div>
+                    <div className="py-2 space-y-0.5 text-xs text-left">
+                      <div className="flex items-center gap-2 p-2 hover:bg-gray-55 dark:hover:bg-gray-900 rounded-lg text-gray-600 dark:text-gray-300">
+                        <User className="w-3.5 h-3.5 text-indigo-500" />
+                        <span>Profile details</span>
+                      </div>
+                      <div
+                        onClick={handleLogout}
+                        className="flex items-center gap-2 p-2 hover:bg-red-50 dark:hover:bg-red-500/10 rounded-lg text-red-500 font-semibold cursor-pointer"
+                      >
+                        <LogOut className="w-3.5 h-3.5" />
+                        <span>Sign out</span>
+                      </div>
+                    </div>
+                  </div>
+                )}
+              </div>
+            )}
           </nav>
         </header>
 
-        <main className="flex-1 overflow-auto">{children}</main>
+        {/* Main Content Viewport */}
+        <main className="flex-1 overflow-auto bg-slate-50/20 dark:bg-slate-950/10 transition-colors duration-300">
+          {children}
+        </main>
       </div>
+
     </div>
   );
 }

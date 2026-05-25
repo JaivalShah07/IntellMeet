@@ -121,7 +121,8 @@ export default function MeetingRoom() {
     safeRoomId,
     isVideoOff,
     isMuted,
-    isHookDisabled
+    isHookDisabled,
+    userName
   );
 
   const { isRecording, recordingDuration, startRecording, stopRecording } = useMeetingRecorder(

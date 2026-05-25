@@ -4,6 +4,7 @@ import { Video, Calendar, Clock, Plus, Loader2, X } from "lucide-react";
 import PageHeader from "../components/ui/PageHeader";
 import api from "../lib/api";
 import type { Meeting } from "../types";
+import CreateMeetingModal from "../components/CreateMeetingModal";
 
 export default function MeetingsList() {
   const [meetings, setMeetings] = useState<Meeting[]>([]);
@@ -15,11 +16,6 @@ export default function MeetingsList() {
   // Search & Filters
   const [searchQuery, setSearchQuery] = useState("");
   const [statusFilter, setStatusFilter] = useState("all");
-
-  // New Meeting Form
-  const [title, setTitle] = useState("");
-  const [type, setType] = useState("Video");
-  const [creating, setCreating] = useState(false);
 
   const navigate = useNavigate();
 
@@ -33,20 +29,6 @@ export default function MeetingsList() {
       .then((res) => setMeetings(res.data.meetings))
       .catch(console.error)
       .finally(() => setLoading(false));
-  };
-
-  const handleCreateMeeting = async (e: React.FormEvent) => {
-    e.preventDefault();
-    if (!title.trim()) return;
-    setCreating(true);
-    try {
-      const { data } = await api.post("/meetings", { title, type, scheduledAt: new Date().toISOString() });
-      setShowModal(false);
-      navigate(`/meeting?room=${data.meeting.roomId}`);
-    } catch (err: any) {
-      alert(err.response?.data?.message || "Failed to create meeting");
-      setCreating(false);
-    }
   };
 
   const handleJoinMeeting = (e: React.FormEvent) => {
@@ -175,60 +157,12 @@ export default function MeetingsList() {
           </div>
         )}
 
-        {/* Create Meeting Modal */}
-        {showModal && (
-          <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/50 backdrop-blur-sm animate-fade-in">
-            <div className="bg-white dark:bg-gray-900 w-full max-w-md rounded-2xl shadow-2xl overflow-hidden animate-slide-up">
-              <div className="p-6 border-b border-gray-100 dark:border-gray-800 flex items-center justify-between">
-                <h3 className="text-xl font-bold">New Meeting</h3>
-                <button onClick={() => setShowModal(false)} className="text-gray-400 hover:text-gray-600 dark:hover:text-gray-200">
-                  <X className="w-5 h-5" />
-                </button>
-              </div>
-              <form onSubmit={handleCreateMeeting} className="p-6 space-y-4">
-                <div>
-                  <label className="block text-sm font-medium mb-1.5">Meeting Title</label>
-                  <input
-                    autoFocus
-                    required
-                    value={title}
-                    onChange={(e) => setTitle(e.target.value)}
-                    placeholder="e.g. Weekly Sync"
-                    className="w-full p-3 rounded-xl border border-gray-200 dark:border-gray-700 bg-gray-50 dark:bg-gray-900 focus:ring-2 focus:ring-sky-500 outline-none"
-                  />
-                </div>
-                <div>
-                  <label className="block text-sm font-medium mb-1.5">Meeting Type</label>
-                  <select
-                    value={type}
-                    onChange={(e) => setType(e.target.value)}
-                    className="w-full p-3 rounded-xl border border-gray-200 dark:border-gray-700 bg-gray-50 dark:bg-gray-900 focus:ring-2 focus:ring-sky-500 outline-none"
-                  >
-                    <option value="Video">Video Call</option>
-                    <option value="Presentation">Presentation</option>
-                    <option value="Standup">Standup</option>
-                  </select>
-                </div>
-                <div className="pt-4 flex justify-end gap-3">
-                  <button
-                    type="button"
-                    onClick={() => setShowModal(false)}
-                    className="px-5 py-2.5 rounded-xl font-medium text-gray-600 hover:bg-gray-100 dark:text-gray-300 dark:hover:bg-gray-800 transition-colors"
-                  >
-                    Cancel
-                  </button>
-                  <button
-                    type="submit"
-                    disabled={creating}
-                    className="btn-primary px-6 py-2.5 rounded-xl font-bold flex items-center gap-2"
-                  >
-                    {creating ? <Loader2 className="w-4 h-4 animate-spin" /> : "Create & Join"}
-                  </button>
-                </div>
-              </form>
-            </div>
-          </div>
-        )}
+        {/* Reusable Create Meeting Modal */}
+        <CreateMeetingModal
+          isOpen={showModal}
+          onClose={() => setShowModal(false)}
+          onSuccess={loadMeetings}
+        />
 
         {/* Join Meeting Modal */}
         {showJoinModal && (

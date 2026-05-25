@@ -165,3 +165,16 @@ exports.refreshToken = async (req, res, next) => {
 exports.getMe = (req, res) => {
   res.json({ success: true, user: req.user.toPublicJSON() });
 };
+
+exports.getUsers = async (req, res, next) => {
+  try {
+    const users = await User.find({ _id: { $ne: req.user._id } });
+    res.json({
+      success: true,
+      users: users.map((u) => u.toPublicJSON()),
+    });
+  } catch (err) {
+    next(err);
+  }
+};
+
