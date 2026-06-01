@@ -195,21 +195,33 @@ export default function MeetingRoom() {
     e.preventDefault();
     if (!taskInput.trim() || !meetingInfo?._id) return;
 
+    const title = taskInput.trim();
+    setTaskInput("");
+
+    const tempId = `temp-${Date.now()}`;
+    const newTask = {
+      _id: tempId,
+      title,
+      status: "todo",
+      meetingId: meetingInfo._id
+    };
+    setTasks((prev) => [newTask, ...prev]);
+
     setTaskCreating(true);
     try {
       const { data } = await api.post("/tasks", {
-        title: taskInput.trim(),
+        title,
         meetingId: meetingInfo._id,
       });
 
-      const newTask = data.task;
-      setTasks((prev) => [newTask, ...prev]);
-      setTaskInput("");
+      const actualTask = data.task || { ...newTask, _id: data._id || tempId };
+      setTasks((prev) => prev.map(t => t._id === tempId ? actualTask : t));
 
       if (socket) {
-        socket.emit("task-created", { roomId: safeRoomId, task: newTask });
+        socket.emit("task-created", { roomId: safeRoomId, task: actualTask });
       }
     } catch (err) {
+      setTasks((prev) => prev.filter(t => t._id !== tempId));
       console.error("Failed to create task in meeting:", err);
       alert("Failed to create task");
     } finally {
@@ -406,8 +418,8 @@ export default function MeetingRoom() {
               </span>
             )}
           </div>
-          <span className="text-xs text-slate-400 bg-slate-800/80 px-3 py-1 rounded-lg">
-            WebRTC Peer-to-Peer
+          <span className="text-xs text-slate-400 bg-slate-800/80 px-3 py-1 rounded-lg border border-slate-700">
+            Encrypted Connection
           </span>
         </div>
 
@@ -540,7 +552,7 @@ export default function MeetingRoom() {
             <div className="flex-1 overflow-y-auto space-y-3">
               {messages.length === 0 ? (
                 <p className="text-slate-500 text-sm text-center py-8">
-                  Send a message — real-time via Socket.io
+                  Start the conversation
                 </p>
               ) : (
                 messages.map((msg, i) => (
@@ -618,7 +630,7 @@ export default function MeetingRoom() {
                   <p className="font-semibold text-sm">
                     {peerNames.get(id) || `Participant (${id.slice(0, 4)})`}
                   </p>
-                  <p className="text-xs text-sky-400">WebRTC Peer</p>
+                  <p className="text-xs text-sky-400">Connected</p>
                 </div>
               ))}
             </div>

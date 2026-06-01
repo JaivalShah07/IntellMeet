@@ -27,12 +27,23 @@ export default function TeamManagement() {
   const handleCreateTeam = async (e: React.FormEvent) => {
     e.preventDefault();
     if (!newTeamName.trim()) return;
+    const name = newTeamName.trim();
+    setNewTeamName("");
+
+    const tempId = `temp-${Date.now()}`;
+    const newTeam = {
+      _id: tempId,
+      name,
+      members: [{ _id: user?.id || "me", name: user?.name || "You", email: user?.email || "" }]
+    };
+    setTeams((prev) => [...prev, newTeam]);
+
     setCreating(true);
     try {
-      await api.post("/teams", { name: newTeamName });
-      setNewTeamName("");
-      loadTeams();
+      const { data } = await api.post("/teams", { name });
+      setTeams((prev) => prev.map(t => t._id === tempId ? (data.team || { ...newTeam, _id: data._id || tempId }) : t));
     } catch (err: any) {
+      setTeams((prev) => prev.filter(t => t._id !== tempId));
       alert(err.response?.data?.message || "Failed to create team");
     } finally {
       setCreating(false);

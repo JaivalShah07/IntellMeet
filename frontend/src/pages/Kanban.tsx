@@ -29,19 +29,34 @@ export default function Kanban() {
 
   const addTask = async () => {
     if (!newTitle.trim()) return;
+    const title = newTitle.trim();
+    setNewTitle("");
+
+    const tempId = `temp-${Date.now()}`;
+    const tempTask: Task = { _id: tempId, title, status: "todo" };
+    setTasks((prev) => [...prev, tempTask]);
+
     setAdding(true);
     try {
-      await api.post("/tasks", { title: newTitle.trim() });
-      setNewTitle("");
-      load();
+      const { data } = await api.post("/tasks", { title });
+      setTasks((prev) => prev.map(t => t._id === tempId ? data.task || { ...tempTask, _id: data._id || tempId } : t));
+    } catch (err) {
+      setTasks((prev) => prev.filter(t => t._id !== tempId));
+      console.error(err);
     } finally {
       setAdding(false);
     }
   };
 
   const moveTask = async (id: string, status: Task["status"]) => {
-    await api.patch(`/tasks/${id}`, { status });
-    load();
+    const previousTasks = [...tasks];
+    setTasks((prev) => prev.map((t) => (t._id === id ? { ...t, status } : t)));
+    try {
+      await api.patch(`/tasks/${id}`, { status });
+    } catch (err) {
+      setTasks(previousTasks);
+      console.error(err);
+    }
   };
 
   const doneCount = tasks.filter((t) => t.status === "done").length;
@@ -51,7 +66,7 @@ export default function Kanban() {
       <div className="max-w-7xl mx-auto space-y-8">
         <PageHeader
           title="Task Board"
-          subtitle="MongoDB-backed Kanban — tasks from meetings and manual entries."
+          subtitle="Organize your team's action items seamlessly."
           icon={KanbanIcon}
         />
 
@@ -75,7 +90,7 @@ export default function Kanban() {
 
         <div className="flex items-center gap-2 p-4 rounded-2xl bg-emerald-500/10 border border-emerald-500/20 text-emerald-800 dark:text-emerald-200 text-sm font-medium">
           <PartyPopper className="w-5 h-5 shrink-0" />
-          {doneCount} task{doneCount !== 1 ? "s" : ""} completed — persisted in database.
+          {doneCount} task{doneCount !== 1 ? "s" : ""} completed — great job!
         </div>
 
         {loading ? (

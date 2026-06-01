@@ -159,7 +159,7 @@ export default function Dashboard() {
             <div className="space-y-2">
               <p className="text-sky-100 text-xs font-extrabold flex items-center gap-1.5 uppercase tracking-wider bg-white/10 w-fit px-3 py-1 rounded-full backdrop-blur-md">
                 <Flame className="w-3.5 h-3.5 text-amber-300 fill-amber-300 animate-pulse" />
-                SaaS Dashboard Connected
+                Workspace Connected
               </p>
               <h1 className="text-3xl md:text-5xl font-black tracking-tight leading-tight">
                 {greeting}, {firstName}!
