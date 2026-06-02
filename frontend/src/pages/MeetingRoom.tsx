@@ -421,6 +421,9 @@ export default function MeetingRoom() {
           <span className="text-xs text-slate-400 bg-slate-800/80 px-3 py-1 rounded-lg border border-slate-700">
             Encrypted Connection
           </span>
+          <div className="text-xs text-slate-300 bg-slate-800/80 px-3 py-1 rounded-lg border border-slate-700">
+  Participants: {totalParticipants}
+</div>
         </div>
 
         <div className="flex-1 p-6 pt-24 pb-32 flex items-center justify-center">
