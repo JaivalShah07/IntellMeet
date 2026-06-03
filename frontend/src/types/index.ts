@@ -14,10 +14,18 @@ export interface Meeting {
   durationMinutes?: number;
   type: string;
   status: string;
+
+  description?: string;
+  participants?: string[];
+
   summary?: string;
   sentimentScore?: number;
   transcript?: string;
-  host?: { name: string; email: string };
+
+  host?: {
+    name: string;
+    email: string;
+  };
 }
 
 export interface Task {
