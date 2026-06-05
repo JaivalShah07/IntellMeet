@@ -23,7 +23,6 @@ const meetingSchema = new mongoose.Schema(
     sentimentScore: { type: Number, default: null },
     hasRecording: { type: Boolean, default: false },
     notes: { type: String, default: "" },
-    description: { type: String, default: "" },
   },
   { timestamps: true }
 );

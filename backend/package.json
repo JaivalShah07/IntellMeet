@@ -5,8 +5,7 @@
   "main": "src/server.js",
   "scripts": {
     "dev": "node --watch server.js",
-    "start": "node server.js",
-    "seed": "node seed.js"
+    "start": "node server.js"
   },
   "type": "commonjs",
   "dependencies": {
