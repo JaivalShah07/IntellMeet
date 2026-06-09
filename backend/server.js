@@ -28,7 +28,7 @@ async function start() {
 
   const io = new Server(server, {
     cors: { 
-      origin: [CLIENT_URL, "http://127.0.0.1:5173"], 
+      origin: [CLIENT_URL, "https://intellmeet-m1au.onrender.com"], 
       methods: ["GET", "POST"],
       credentials: true 
     },
