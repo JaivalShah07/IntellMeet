@@ -37,7 +37,7 @@ async function start() {
   app.use(helmet());
   app.use(
     cors({
-      origin: [CLIENT_URL, "http://127.0.0.1:5173"],
+      origin: [CLIENT_URL, "https://intellmeet-m1au.onrender.com"],
       credentials: true,
     })
   );
