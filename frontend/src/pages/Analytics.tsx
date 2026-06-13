@@ -58,7 +58,7 @@ export default function Analytics() {
         { label: "Total Meetings", value: stats.totalMeetings, icon: BarChart3 },
         { label: "Avg Engagement", value: stats.avgEngagement, icon: TrendingUp },
         { label: "Tasks Completed", value: stats.tasksCompleted, icon: CheckCircle2 },
-        { label: "Hours Collaborated", value: stats.hoursCollaborated, icon: Clock },
+        { label: "Hours Collaborated", value: `${stats.hoursCollaborated}h`, icon: Clock },
         { label: "Active Projects", value: stats.activeProjects, icon: Users },
       ]
     : [];
@@ -84,7 +84,7 @@ export default function Analytics() {
         <div className="p-4 rounded-2xl bg-emerald-500/10 border border-emerald-500/20 flex items-center gap-3">
           <Sparkles className="w-5 h-5 text-emerald-600" />
           <p className="text-sm font-medium text-emerald-800 dark:text-emerald-200">
-            Data synced from meetings and tasks — supports enterprise reporting (F-07).
+            Data synced from meetings and tasks — supports enterprise reporting
           </p>
         </div>
 
@@ -108,14 +108,15 @@ export default function Analytics() {
             <Clock className="w-5 h-5 text-indigo-500" />
             Meeting momentum
           </h2>
-          <div className="h-52 flex items-end gap-2">
+          <div className="h-52 flex items-end gap-2 bg-slate-50/50 dark:bg-slate-900/10 p-4 rounded-xl border border-gray-100 dark:border-gray-800">
             {chartData.map((height, i) => (
-              <div key={i} className="flex-1 flex flex-col items-center gap-2">
+              <div key={i} className="flex-1 h-full flex flex-col justify-end items-center gap-2">
                 <div
-                  className="w-full rounded-t-xl bg-gradient-to-t from-sky-600 to-indigo-400"
+                  className="w-full rounded-t-xl bg-gradient-to-t from-sky-600 to-indigo-400 shadow-sm transition-all duration-500 hover:brightness-110"
                   style={{ height: `${height}%` }}
+                  title={`Week ${i + 1} Activity`}
                 />
-                <span className="text-xs text-gray-400">W{i + 1}</span>
+                <span className="text-[10px] font-bold text-gray-400 uppercase tracking-wider shrink-0">W{i + 1}</span>
               </div>
             ))}
           </div>

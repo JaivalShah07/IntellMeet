@@ -55,15 +55,51 @@ exports.generateInsights = async (transcript, meetingTitle) => {
       contents: prompt,
       config: {
         responseMimeType: "application/json",
+        responseSchema: {
+          type: "OBJECT",
+          properties: {
+            summary: { type: "STRING" },
+            actionItems: {
+              type: "ARRAY",
+              items: {
+                type: "OBJECT",
+                properties: {
+                  title: { type: "STRING" },
+                  status: { type: "STRING" }
+                },
+                required: ["title"]
+              }
+            },
+            sentimentScore: { type: "INTEGER" }
+          },
+          required: ["summary", "actionItems", "sentimentScore"]
+        }
       }
     });
 
     const text = response.text;
     const parsed = JSON.parse(text);
 
+    let actionItems = [];
+    const rawItems = parsed.actionItems || parsed.action_items || parsed.tasks || [];
+    if (Array.isArray(rawItems)) {
+      actionItems = rawItems.map(item => {
+        if (typeof item === "string") {
+          return { title: item, status: "todo" };
+        }
+        if (item && typeof item === "object") {
+          return {
+            title: item.title || item.task || item.description || item.name || "Action Item",
+            status: item.status || "todo"
+          };
+        }
+        return null;
+      }).filter(Boolean);
+    }
+
     return {
       summary: parsed.summary || "Summary generation failed.",
-      actionItems: Array.isArray(parsed.actionItems) ? parsed.actionItems : [],
+      actionItems,
       sentimentScore: typeof parsed.sentimentScore === "number" ? parsed.sentimentScore : 75,
     };
   } catch (error) {

@@ -60,35 +60,35 @@ export default function Signup() {
         )}
 
         <div>
-          <label className="block text-sm font-medium mb-1.5">Full name</label>
+          <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1.5">Full name</label>
           <input
             type="text"
             value={name}
             onChange={(e) => setName(e.target.value)}
-            className="w-full p-4 rounded-xl border border-gray-200 dark:border-gray-700 bg-white dark:bg-gray-900/80 focus:ring-2 focus:ring-sky-500 outline-none"
+            className="w-full p-4 rounded-xl border border-gray-200 dark:border-gray-700 bg-white dark:bg-gray-900/80 text-gray-900 dark:text-white focus:ring-2 focus:ring-sky-500 outline-none"
             required
           />
         </div>
 
         <div>
-          <label className="block text-sm font-medium mb-1.5">Email</label>
+          <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1.5">Email</label>
           <input
             type="email"
             value={email}
             onChange={(e) => setEmail(e.target.value)}
-            className="w-full p-4 rounded-xl border border-gray-200 dark:border-gray-700 bg-white dark:bg-gray-900/80 focus:ring-2 focus:ring-sky-500 outline-none"
+            className="w-full p-4 rounded-xl border border-gray-200 dark:border-gray-700 bg-white dark:bg-gray-900/80 text-gray-900 dark:text-white focus:ring-2 focus:ring-sky-500 outline-none"
             required
           />
         </div>
 
         <div>
-          <label className="block text-sm font-medium mb-1.5">Password</label>
+          <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1.5">Password</label>
           <input
             type="password"
             value={password}
             onChange={(e) => setPassword(e.target.value)}
             minLength={6}
-            className="w-full p-4 rounded-xl border border-gray-200 dark:border-gray-700 bg-white dark:bg-gray-900/80 focus:ring-2 focus:ring-sky-500 outline-none"
+            className="w-full p-4 rounded-xl border border-gray-200 dark:border-gray-700 bg-white dark:bg-gray-900/80 text-gray-900 dark:text-white focus:ring-2 focus:ring-sky-500 outline-none"
             required
           />
         </div>

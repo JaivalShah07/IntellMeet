@@ -1,5 +1,5 @@
 // @ts-nocheck
-import { NavLink, useNavigate, useLocation } from "react-router-dom";
+import { NavLink, useNavigate, useLocation, Link } from "react-router-dom";
 import { useState, useRef, useEffect } from "react";
 import {
   LayoutDashboard,
@@ -48,7 +48,57 @@ export default function DashboardLayout({ children }: { children: ReactNode }) {
   const location = useLocation();
 
   const [profileDropdownOpen, setProfileDropdownOpen] = useState(false);
-  const dropdownRef = useRef<HTMLDivElement>(null);
+  const [notificationDropdownOpen, setNotificationDropdownOpen] = useState(false);
+  const desktopDropdownRef = useRef<HTMLDivElement>(null);
+  const mobileDropdownRef = useRef<HTMLDivElement>(null);
+  const notificationDropdownRef = useRef<HTMLDivElement>(null);
+
+  const [notifications, setNotifications] = useState([
+    {
+      id: "1",
+      title: "New Task Assigned",
+      message: "Jane Doe assigned 'Design modern dashboard layout' to you.",
+      time: "2 hours ago",
+      read: false,
+      type: "task",
+    },
+    {
+      id: "2",
+      title: "Meeting Invitation",
+      message: "Demo Admin invited you to 'Weekly Sync — Product Team'.",
+      time: "5 hours ago",
+      read: false,
+      type: "meeting",
+    },
+    {
+      id: "3",
+      title: "AI Summary Completed",
+      message: "AI insights generated for 'Sprint Planning & Roadmap review'.",
+      time: "1 day ago",
+      read: true,
+      type: "ai",
+    },
+    {
+      id: "4",
+      title: "Welcome to IntellMeet",
+      message: "Your enterprise collaboration space is ready.",
+      time: "3 days ago",
+      read: true,
+      type: "system",
+    },
+  ]);
+
+  const unreadCount = notifications.filter((n) => !n.read).length;
+
+  const markAllAsRead = () => {
+    setNotifications((prev) => prev.map((n) => ({ ...n, read: true })));
+  };
+
+  const handleNotificationClick = (id: string) => {
+    setNotifications((prev) =>
+      prev.map((n) => (n.id === id ? { ...n, read: true } : n))
+    );
+  };
 
   const handleLogout = () => {
     logout();
@@ -58,13 +108,28 @@ export default function DashboardLayout({ children }: { children: ReactNode }) {
   // Close dropdown on click outside
   useEffect(() => {
     function handleClickOutside(event: MouseEvent) {
-      if (dropdownRef.current && !dropdownRef.current.contains(event.target as Node)) {
+      const target = event.target as Node;
+      
+      const clickedDesktop = desktopDropdownRef.current?.contains(target);
+      const clickedMobile = mobileDropdownRef.current?.contains(target);
+      if (!clickedDesktop && !clickedMobile) {
         setProfileDropdownOpen(false);
+      }
+
+      const clickedNotification = notificationDropdownRef.current?.contains(target);
+      if (!clickedNotification) {
+        setNotificationDropdownOpen(false);
       }
     }
     document.addEventListener("mousedown", handleClickOutside);
     return () => document.removeEventListener("mousedown", handleClickOutside);
   }, []);
+
+  // Close dropdown on location changes to avoid interrupting Link navigation
+  useEffect(() => {
+    setProfileDropdownOpen(false);
+    setNotificationDropdownOpen(false);
+  }, [location]);
 
   const getPageTitle = () => {
     const path = location.pathname;
@@ -140,7 +205,7 @@ export default function DashboardLayout({ children }: { children: ReactNode }) {
             className="flex w-full items-center gap-3 px-4 py-3 rounded-xl text-sm font-semibold text-gray-500 hover:text-red-600 hover:bg-red-50 dark:hover:bg-red-500/10 transition-all duration-300"
           >
             <LogOut className="w-5 h-5" />
-            Sign out
+            Logout
           </button>
         </div>
       </aside>
@@ -160,25 +225,120 @@ export default function DashboardLayout({ children }: { children: ReactNode }) {
           </div>
 
           {/* Center Search Input */}
-          <div className="relative w-64 max-w-sm">
-            <span className="absolute inset-y-0 left-0 flex items-center pl-3 pointer-events-none">
-              <Search className="w-4 h-4 text-gray-400" />
-            </span>
-            <input
-              type="text"
-              placeholder="Search meetings, tasks..."
-              className="w-full pl-9 pr-4 py-2 text-xs rounded-full border border-gray-200 dark:border-gray-800 bg-gray-50/50 dark:bg-gray-900/50 text-gray-900 dark:text-white focus:outline-none focus:ring-2 focus:ring-sky-500/50 transition-all"
-            />
-          </div>
+          {location.pathname.startsWith("/meetings") || location.pathname.startsWith("/kanban") ? (
+            <div className="relative w-64 max-w-sm">
+              <span className="absolute inset-y-0 left-0 flex items-center pl-3 pointer-events-none">
+                <Search className="w-4 h-4 text-gray-400" />
+              </span>
+              <input
+                type="text"
+                placeholder={location.pathname.startsWith("/meetings") ? "Search meetings..." : "Search tasks..."}
+                className="w-full pl-9 pr-4 py-2 text-xs rounded-full border border-gray-200 dark:border-gray-800 bg-gray-50/50 dark:bg-gray-900/50 text-gray-900 dark:text-white focus:outline-none focus:ring-2 focus:ring-sky-500/50 transition-all"
+              />
+            </div>
+          ) : (
+            <div className="w-64 max-w-sm" />
+          )}
 
           {/* Right utilities */}
           <div className="flex items-center gap-4">
             
-            {/* Notification Badge */}
-            <button className="p-2 rounded-full hover:bg-gray-100 dark:hover:bg-gray-900 text-gray-500 relative transition-all">
-              <Bell className="w-5 h-5" />
-              <span className="absolute top-1.5 right-1.5 w-2 h-2 rounded-full bg-red-500 border border-white dark:border-gray-950" />
-            </button>
+            {/* Notification Badge & Dropdown */}
+            <div className="relative" ref={notificationDropdownRef}>
+              <button
+                onClick={() => setNotificationDropdownOpen((prev) => !prev)}
+                className={cn(
+                  "p-2 rounded-full hover:bg-gray-100 dark:hover:bg-gray-900 text-gray-500 hover:text-indigo-500 dark:hover:text-indigo-400 relative transition-all outline-none",
+                  notificationDropdownOpen && "bg-gray-100 dark:bg-gray-900 text-indigo-500"
+                )}
+              >
+                <Bell className="w-5 h-5" />
+                {unreadCount > 0 && (
+                  <span className="absolute top-1.5 right-1.5 w-4 h-4 rounded-full bg-red-500 border-2 border-white dark:border-gray-950 text-[9px] font-black text-white flex items-center justify-center scale-90 animate-pulse">
+                    {unreadCount}
+                  </span>
+                )}
+              </button>
+
+              {/* Notification Dropdown Card */}
+              {notificationDropdownOpen && (
+                <div className="absolute right-0 mt-3 w-80 rounded-2xl border border-gray-150 dark:border-gray-800 bg-white dark:bg-gray-950 shadow-2xl p-4 animate-slide-up z-50 text-left">
+                  <div className="flex items-center justify-between pb-3 border-b border-gray-100 dark:border-gray-900">
+                    <div className="flex items-center gap-2">
+                      <span className="font-extrabold text-sm text-gray-800 dark:text-gray-200">Notifications</span>
+                      {unreadCount > 0 && (
+                        <span className="text-[10px] font-bold bg-indigo-500/10 text-indigo-600 dark:text-indigo-400 px-2 py-0.5 rounded-full">
+                          {unreadCount} New
+                        </span>
+                      )}
+                    </div>
+                    {unreadCount > 0 && (
+                      <button
+                        onClick={markAllAsRead}
+                        className="text-[10px] font-bold text-sky-500 hover:text-sky-600 transition-colors"
+                      >
+                        Mark all as read
+                      </button>
+                    )}
+                  </div>
+
+                  <div className="mt-2 max-h-72 overflow-y-auto divide-y divide-gray-50 dark:divide-gray-900">
+                    {notifications.length === 0 ? (
+                      <div className="py-8 text-center text-gray-400 text-xs">
+                        No notifications
+                      </div>
+                    ) : (
+                      notifications.map((notif) => (
+                        <div
+                          key={notif.id}
+                          onClick={() => handleNotificationClick(notif.id)}
+                          className={cn(
+                            "py-3 flex gap-3 cursor-pointer transition-colors px-2 rounded-xl mt-1 hover:bg-sky-500/5 dark:hover:bg-sky-500/10",
+                            !notif.read && "bg-sky-500/[0.02] dark:bg-indigo-500/[0.02]"
+                          )}
+                        >
+                          <div className="shrink-0 mt-0.5">
+                            {notif.type === "task" && (
+                              <div className="w-8 h-8 rounded-full bg-emerald-500/10 text-emerald-500 flex items-center justify-center">
+                                <Kanban className="w-4 h-4" />
+                              </div>
+                            )}
+                            {notif.type === "meeting" && (
+                              <div className="w-8 h-8 rounded-full bg-sky-500/10 text-sky-500 flex items-center justify-center">
+                                <Video className="w-4 h-4" />
+                              </div>
+                            )}
+                            {notif.type === "ai" && (
+                              <div className="w-8 h-8 rounded-full bg-amber-500/10 text-amber-500 flex items-center justify-center">
+                                <Brain className="w-4 h-4" />
+                              </div>
+                            )}
+                            {notif.type === "system" && (
+                              <div className="w-8 h-8 rounded-full bg-indigo-500/10 text-indigo-500 flex items-center justify-center">
+                                <Sparkles className="w-4 h-4" />
+                              </div>
+                            )}
+                          </div>
+
+                          <div className="min-w-0 flex-1">
+                            <div className="flex justify-between items-start gap-1">
+                              <p className={cn("text-xs leading-normal text-gray-800 dark:text-gray-200", !notif.read ? "font-bold" : "font-medium")}>
+                                {notif.title}
+                              </p>
+                              {!notif.read && (
+                                <span className="w-1.5 h-1.5 rounded-full bg-indigo-500 mt-1.5 shrink-0" />
+                              )}
+                            </div>
+                            <p className="text-[10px] text-gray-450 dark:text-gray-400 leading-normal mt-0.5">{notif.message}</p>
+                            <p className="text-[9px] text-gray-400 mt-1 font-medium">{notif.time}</p>
+                          </div>
+                        </div>
+                      ))
+                    )}
+                  </div>
+                </div>
+              )}
+            </div>
 
             {/* Dark Mode Switcher */}
             <ThemeToggle />
@@ -187,7 +347,7 @@ export default function DashboardLayout({ children }: { children: ReactNode }) {
 
             {/* Interactive Profile Dropdown */}
             {user && (
-              <div className="relative" ref={dropdownRef}>
+              <div className="relative" ref={desktopDropdownRef}>
                 <button
                   onClick={() => setProfileDropdownOpen((prev) => !prev)}
                   className="flex items-center gap-2.5 p-1.5 rounded-full hover:bg-gray-100 dark:hover:bg-gray-900 transition-all outline-none"
@@ -212,10 +372,13 @@ export default function DashboardLayout({ children }: { children: ReactNode }) {
                     </div>
 
                     <div className="py-2.5 space-y-1 text-xs">
-                      <div className="flex items-center gap-2 px-2.5 py-2 text-gray-600 dark:text-gray-300 font-semibold rounded-lg hover:bg-gray-50 dark:hover:bg-gray-900">
+                      <Link
+                        to="/profile"
+                        className="flex items-center gap-2 px-2.5 py-2 text-gray-600 dark:text-gray-300 font-semibold rounded-lg hover:bg-gray-50 dark:hover:bg-gray-900"
+                      >
                         <User className="w-4 h-4 text-indigo-500" />
                         <span>Profile Details</span>
-                      </div>
+                      </Link>
                       <div className="flex items-center justify-between px-2.5 py-2 text-gray-600 dark:text-gray-300 font-semibold rounded-lg hover:bg-gray-50 dark:hover:bg-gray-900">
                         <div className="flex items-center gap-2">
                           <Shield className="w-4 h-4 text-emerald-500" />
@@ -225,10 +388,13 @@ export default function DashboardLayout({ children }: { children: ReactNode }) {
                           {user.role}
                         </span>
                       </div>
-                      <div className="flex items-center gap-2 px-2.5 py-2 text-gray-600 dark:text-gray-300 font-semibold rounded-lg hover:bg-gray-50 dark:hover:bg-gray-900">
+                      <Link
+                        to="/settings"
+                        className="flex items-center gap-2 px-2.5 py-2 text-gray-600 dark:text-gray-300 font-semibold rounded-lg hover:bg-gray-50 dark:hover:bg-gray-900"
+                      >
                         <Settings className="w-4 h-4 text-sky-500" />
                         <span>Workspace Settings</span>
-                      </div>
+                      </Link>
                     </div>
 
                     <div className="pt-2 border-t border-gray-100 dark:border-gray-900">
@@ -237,7 +403,7 @@ export default function DashboardLayout({ children }: { children: ReactNode }) {
                         className="w-full flex items-center gap-2 px-2.5 py-2.5 text-xs font-bold text-red-500 hover:bg-red-50 dark:hover:bg-red-500/10 rounded-xl transition-all"
                       >
                         <LogOut className="w-4 h-4" />
-                        Sign out
+                        Logout
                       </button>
                     </div>
                   </div>
@@ -274,7 +440,7 @@ export default function DashboardLayout({ children }: { children: ReactNode }) {
 
             {/* Mobile Dropdown Triggers */}
             {user && (
-              <div className="relative" ref={dropdownRef}>
+              <div className="relative" ref={mobileDropdownRef}>
                 <button
                   onClick={() => setProfileDropdownOpen((prev) => !prev)}
                   className="w-8 h-8 rounded-full border border-sky-500/20 overflow-hidden ml-1 outline-none"
@@ -295,16 +461,19 @@ export default function DashboardLayout({ children }: { children: ReactNode }) {
                       <p className="text-[10px] text-gray-400 truncate mt-0.5">{user.email}</p>
                     </div>
                     <div className="py-2 space-y-0.5 text-xs text-left">
-                      <div className="flex items-center gap-2 p-2 hover:bg-gray-55 dark:hover:bg-gray-900 rounded-lg text-gray-600 dark:text-gray-300">
+                      <Link
+                        to="/profile"
+                        className="flex items-center gap-2 p-2 hover:bg-gray-55 dark:hover:bg-gray-900 rounded-lg text-gray-600 dark:text-gray-300"
+                      >
                         <User className="w-3.5 h-3.5 text-indigo-500" />
                         <span>Profile details</span>
-                      </div>
+                      </Link>
                       <div
                         onClick={handleLogout}
                         className="flex items-center gap-2 p-2 hover:bg-red-50 dark:hover:bg-red-500/10 rounded-lg text-red-500 font-semibold cursor-pointer"
                       >
                         <LogOut className="w-3.5 h-3.5" />
-                        <span>Sign out</span>
+                        <span>Logout</span>
                       </div>
                     </div>
                   </div>

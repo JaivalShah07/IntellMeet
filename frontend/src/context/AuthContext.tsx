@@ -16,6 +16,7 @@ interface AuthContextType {
   register: (name: string, email: string, password: string) => Promise<void>;
   googleLogin: (credential: string) => Promise<void>;
   logout: () => void;
+  updateUser: (user: User) => void;
 }
 
 const AuthContext = createContext<AuthContextType | null>(null);
@@ -87,6 +88,11 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
     setUser(null);
   };
 
+  const updateUser = (newUser: User) => {
+    localStorage.setItem("intellmeet_user", JSON.stringify(newUser));
+    setUser(newUser);
+  };
+
   if (loading) {
     return (
       <div className="min-h-screen mesh-bg flex items-center justify-center">
@@ -99,7 +105,7 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
   }
 
   return (
-    <AuthContext.Provider value={{ user, token, loading, login, register, googleLogin, logout }}>
+    <AuthContext.Provider value={{ user, token, loading, login, register, googleLogin, logout, updateUser }}>
       {children}
     </AuthContext.Provider>
   );

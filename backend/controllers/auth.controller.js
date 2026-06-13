@@ -165,3 +165,81 @@ exports.refreshToken = async (req, res, next) => {
 exports.getMe = (req, res) => {
   res.json({ success: true, user: req.user.toPublicJSON() });
 };
+
+const updateProfileSchema = z.object({
+  name: z.string().trim().min(1, "Name is required").optional(),
+  email: z.string().trim().email("Invalid email").optional(),
+  avatar: z.string().url("Invalid avatar URL").or(z.string().length(0)).optional(),
+});
+
+exports.updateProfile = async (req, res, next) => {
+  try {
+    const parsed = updateProfileSchema.safeParse(req.body);
+    if (!parsed.success) {
+      return res.status(400).json({ success: false, message: parsed.error.errors[0].message });
+    }
+    
+    const { name, email, avatar } = parsed.data;
+    const user = await User.findById(req.user._id);
+    
+    if (!user) {
+      return res.status(404).json({ success: false, message: "User not found" });
+    }
+    
+    if (email && email.toLowerCase() !== user.email) {
+      const exists = await User.findOne({ email: email.toLowerCase() });
+      if (exists) {
+        return res.status(409).json({ success: false, message: "Email already in use" });
+      }
+      user.email = email.toLowerCase();
+    }
+    
+    if (name) user.name = name;
+    if (avatar !== undefined) user.avatar = avatar;
+    
+    await user.save();
+    
+    res.json({
+      success: true,
+      message: "Profile updated successfully",
+      user: user.toPublicJSON(),
+    });
+  } catch (err) {
+    next(err);
+  }
+};
+
+const changePasswordSchema = z.object({
+  currentPassword: z.string().min(1, "Current password is required"),
+  newPassword: z.string().min(6, "New password must be at least 6 characters"),
+});
+
+exports.changePassword = async (req, res, next) => {
+  try {
+    const parsed = changePasswordSchema.safeParse(req.body);
+    if (!parsed.success) {
+      return res.status(400).json({ success: false, message: parsed.error.errors[0].message });
+    }
+    
+    const { currentPassword, newPassword } = parsed.data;
+    const user = await User.findById(req.user._id).select("+password");
+    
+    if (!user) {
+      return res.status(404).json({ success: false, message: "User not found" });
+    }
+    
+    if (!(await user.comparePassword(currentPassword))) {
+      return res.status(401).json({ success: false, message: "Incorrect current password" });
+    }
+    
+    user.password = newPassword;
+    await user.save();
+    
+    res.json({
+      success: true,
+      message: "Password updated successfully",
+    });
+  } catch (err) {
+    next(err);
+  }
+};

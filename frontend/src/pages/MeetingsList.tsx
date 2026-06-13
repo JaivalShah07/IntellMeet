@@ -1,6 +1,6 @@
 import { useEffect, useState } from "react";
 import { Link, useNavigate } from "react-router-dom";
-import { Video, Calendar, Clock, Plus, Loader2, X } from "lucide-react";
+import { Video, Calendar, Clock, Plus, Loader2, X, Play } from "lucide-react";
 import PageHeader from "../components/ui/PageHeader";
 import api from "../lib/api";
 import type { Meeting } from "../types";
@@ -140,15 +140,28 @@ export default function MeetingsList() {
                         }`}>
                         {m.status === 'completed' ? 'Completed' : m.type}
                       </span>
-                      <Link
-                        to={`/meeting?room=${m.roomId}`}
-                        className={`px-6 py-2 rounded-xl text-sm font-bold shadow-sm transition-all ${m.status === 'completed'
-                            ? 'bg-white border border-gray-200 text-gray-700 hover:bg-gray-50 dark:bg-gray-800 dark:border-gray-700 dark:text-gray-300 dark:hover:bg-gray-700'
-                            : 'btn-primary'
-                          }`}
-                      >
-                        Join
-                      </Link>
+                      {m.status === 'completed' ? (
+                        m.hasRecording ? (
+                          <a
+                            href={m.recordingUrl || "#"}
+                            target="_blank"
+                            rel="noopener noreferrer"
+                            className="px-6 py-2 rounded-xl text-sm font-bold shadow-sm bg-indigo-500 hover:bg-indigo-600 text-white flex items-center gap-1.5 transition-all cursor-pointer"
+                          >
+                            <Play className="w-3.5 h-3.5 fill-white" />
+                            Watch
+                          </a>
+                        ) : (
+                          <span className="text-sm text-gray-400 font-medium px-4">Ended</span>
+                        )
+                      ) : (
+                        <Link
+                          to={`/meeting?room=${m.roomId}`}
+                          className="btn-primary px-6 py-2 rounded-xl text-sm font-bold shadow-sm transition-all"
+                        >
+                          Join
+                        </Link>
+                      )}
                     </div>
                   </div>
                 ))
@@ -176,7 +189,7 @@ export default function MeetingsList() {
               </div>
               <form onSubmit={handleJoinMeeting} className="p-6 space-y-4">
                 <div>
-                  <label className="block text-sm font-medium mb-1.5">Room ID</label>
+                  <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1.5">Room ID</label>
                   <input
                     autoFocus
                     required

@@ -11,6 +11,8 @@ import AIInsights from "../pages/AIInsights";
 import Kanban from "../pages/Kanban";
 import TeamManagement from "../pages/TeamManagement";
 import AcceptInvite from "../pages/AcceptInvite";
+import Profile from "../pages/Profile";
+import Settings from "../pages/Settings";
 
 import ProtectedRoute from "../components/ProtectedRoute";
 import DashboardLayout from "../layouts/DashboardLayout";
@@ -75,6 +77,22 @@ export default function AppRoutes() {
         element={
           <DashboardPage>
             <TeamManagement />
+          </DashboardPage>
+        }
+      />
+      <Route
+        path="/profile"
+        element={
+          <DashboardPage>
+            <Profile />
+          </DashboardPage>
+        }
+      />
+      <Route
+        path="/settings"
+        element={
+          <DashboardPage>
+            <Settings />
           </DashboardPage>
         }
       />

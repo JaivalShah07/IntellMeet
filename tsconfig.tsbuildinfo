@@ -1,1 +1,0 @@
-{"root":["./frontend/src/app.tsx","./frontend/src/main.tsx","./frontend/src/components/sidebar.tsx","./frontend/src/pages/dashboard.tsx","./frontend/src/pages/home.tsx","./frontend/src/pages/login.tsx","./frontend/src/pages/signup.tsx","./frontend/src/pages/test.tsx","./frontend/src/routes/approutes.tsx"],"errors":true,"version":"6.0.3"}

@@ -1,8 +1,14 @@
 import { useState, useRef, useEffect } from "react";
+import api from "../lib/api";
 
-export function useMeetingRecorder(localStream: MediaStream | null, roomId: string) {
+export function useMeetingRecorder(
+  localStream: MediaStream | null,
+  roomId: string,
+  meetingId?: string
+) {
   const [isRecording, setIsRecording] = useState(false);
   const [recordingDuration, setRecordingDuration] = useState(0);
+  const [isUploading, setIsUploading] = useState(false);
 
   const mediaRecorderRef = useRef<MediaRecorder | null>(null);
   const recordedChunksRef = useRef<Blob[]>([]);
@@ -125,9 +131,11 @@ export function useMeetingRecorder(localStream: MediaStream | null, roomId: stri
     mixedAudioDestRef.current = null;
   };
 
-  const saveRecording = () => {
+  const saveRecording = async () => {
     if (recordedChunksRef.current.length === 0) return;
     const blob = new Blob(recordedChunksRef.current, { type: "video/webm" });
+
+    // Local download backup
     const url = URL.createObjectURL(blob);
     const a = document.createElement("a");
     a.style.display = "none";
@@ -139,6 +147,25 @@ export function useMeetingRecorder(localStream: MediaStream | null, roomId: stri
       document.body.removeChild(a);
       window.URL.revokeObjectURL(url);
     }, 100);
+
+    // Upload to server/Cloudinary
+    if (meetingId) {
+      setIsUploading(true);
+      const formData = new FormData();
+      formData.append("recording", blob, `meeting_${roomId}.webm`);
+
+      try {
+        await api.post(`/upload/recording/${meetingId}`, formData, {
+          headers: {
+            "Content-Type": "multipart/form-data",
+          },
+        });
+      } catch (err) {
+        console.error("Failed to upload recording to Cloudinary/Server:", err);
+      } finally {
+        setIsUploading(false);
+      }
+    }
   };
 
   useEffect(() => {
@@ -153,5 +180,6 @@ export function useMeetingRecorder(localStream: MediaStream | null, roomId: stri
     recordingDuration,
     startRecording,
     stopRecording,
+    isUploading,
   };
 }

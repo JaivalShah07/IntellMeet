@@ -87,7 +87,7 @@ export default function Login() {
             type="email"
             value={email}
             onChange={(e) => setEmail(e.target.value)}
-            className="w-full p-4 rounded-xl border border-gray-200 dark:border-gray-700 bg-white dark:bg-gray-900/80 focus:ring-2 focus:ring-sky-500 outline-none"
+            className="w-full p-4 rounded-xl border border-gray-200 dark:border-gray-700 bg-white dark:bg-gray-900/80 text-gray-900 dark:text-white focus:ring-2 focus:ring-sky-500 outline-none"
             required
           />
         </div>
@@ -100,7 +100,7 @@ export default function Login() {
             type="password"
             value={password}
             onChange={(e) => setPassword(e.target.value)}
-            className="w-full p-4 rounded-xl border border-gray-200 dark:border-gray-700 bg-white dark:bg-gray-900/80 focus:ring-2 focus:ring-sky-500 outline-none"
+            className="w-full p-4 rounded-xl border border-gray-200 dark:border-gray-700 bg-white dark:bg-gray-900/80 text-gray-900 dark:text-white focus:ring-2 focus:ring-sky-500 outline-none"
             required
           />
         </div>

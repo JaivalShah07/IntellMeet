@@ -88,7 +88,11 @@ function initializeSockets(io) {
           if (numClients === 0) {
             console.log(`Auto-completing empty meeting room: ${roomId}`);
             try {
-              await Meeting.findOneAndUpdate({ roomId }, { status: "completed" });
+              const meeting = await Meeting.findOne({ roomId });
+              if (meeting && meeting.status !== "completed") {
+                meeting.status = "completed";
+                await meeting.save();
+              }
             } catch (err) {
               console.error("Error auto-completing meeting on disconnect:", err);
             }

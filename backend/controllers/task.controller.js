@@ -5,6 +5,7 @@ const createTaskSchema = z.object({
   title: z.string().trim().min(1, "Title is required"),
   description: z.string().optional(),
   status: z.enum(["todo", "in_progress", "done"]).optional(),
+  priority: z.enum(["low", "medium", "high"]).optional(),
   dueDate: z.string().datetime().optional().or(z.date().optional()),
   meetingId: z.string().optional(),
 });
@@ -13,6 +14,7 @@ const updateTaskSchema = z.object({
   title: z.string().trim().min(1).optional(),
   description: z.string().optional(),
   status: z.enum(["todo", "in_progress", "done"]).optional(),
+  priority: z.enum(["low", "medium", "high"]).optional(),
   dueDate: z.string().datetime().optional().or(z.date().optional()),
 });
 
@@ -37,12 +39,13 @@ exports.createTask = async (req, res, next) => {
     if (!parsed.success) {
       return res.status(400).json({ success: false, message: parsed.error.errors[0].message });
     }
-    const { title, description, status, dueDate, meetingId } = parsed.data;
+    const { title, description, status, priority, dueDate, meetingId } = parsed.data;
 
     const task = await Task.create({
       title,
       description: description || "",
       status: status || "todo",
+      priority: priority || "medium",
       createdBy: req.user._id,
       assignee: req.user._id,
       meeting: meetingId || undefined,

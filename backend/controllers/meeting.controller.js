@@ -52,8 +52,8 @@ exports.getStats = async (req, res, next) => {
       $or: [{ host: userId }, { participants: userId }],
       status: "completed",
     });
-    const totalMinutes = completedMeetings.reduce((acc, m) => acc + (m.durationMinutes || 60), 0);
-    const hoursCollaborated = Number((totalMinutes / 60).toFixed(1));
+    const totalMinutes = completedMeetings.reduce((acc, m) => acc + (m.actualDurationMinutes || m.durationMinutes || 60), 0);
+    const hoursCollaborated = Math.floor((totalMinutes / 60) * 100) / 100;
 
     res.json({
       success: true,
@@ -112,18 +112,15 @@ exports.updateMeetingStatus = async (req, res, next) => {
       return res.status(400).json({ success: false, message: parsed.error.errors[0].message });
     }
 
-    const updateFields = {};
-    if (parsed.data.status) updateFields.status = parsed.data.status;
-    if (parsed.data.hasRecording !== undefined) updateFields.hasRecording = parsed.data.hasRecording;
-
-    const meeting = await Meeting.findByIdAndUpdate(
-      req.params.id,
-      updateFields,
-      { new: true }
-    );
+    const meeting = await Meeting.findById(req.params.id);
     if (!meeting) {
       return res.status(404).json({ success: false, message: "Meeting not found" });
     }
+
+    if (parsed.data.status) meeting.status = parsed.data.status;
+    if (parsed.data.hasRecording !== undefined) meeting.hasRecording = parsed.data.hasRecording;
+
+    await meeting.save();
     res.json({ success: true, meeting });
   } catch (err) {
     next(err);

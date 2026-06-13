@@ -14,6 +14,7 @@ import {
   FileText,
   ListChecks,
   Plus,
+  Loader2,
 } from "lucide-react";
 import { useAuth } from "../context/AuthContext";
 import { useSocket } from "../hooks/useSocket";
@@ -78,6 +79,7 @@ export default function MeetingRoom() {
   const [meetingLoading, setMeetingLoading] = useState(true);
   const [meetingError, setMeetingError] = useState<string | null>(null);
   const [meetingInfo, setMeetingInfo] = useState<any>(null);
+  const [isLeaving, setIsLeaving] = useState(false);
 
   useEffect(() => {
     if (!roomId) {
@@ -94,6 +96,17 @@ export default function MeetingRoom() {
           setMeetingError("This meeting has already ended and cannot be joined.");
         } else {
           setMeetingInfo(meeting);
+          if (meeting.status === "scheduled") {
+            api.patch(`/meetings/${meeting._id}/status`, { status: "live" })
+              .then((statusRes) => {
+                if (statusRes.data?.meeting) {
+                  setMeetingInfo(statusRes.data.meeting);
+                }
+              })
+              .catch((err) => {
+                console.error("Failed to update status to live:", err);
+              });
+          }
         }
       })
       .catch((err) => {
@@ -125,9 +138,10 @@ export default function MeetingRoom() {
     userName
   );
 
-  const { isRecording, recordingDuration, startRecording, stopRecording } = useMeetingRecorder(
+  const { isRecording, recordingDuration, startRecording, stopRecording, isUploading } = useMeetingRecorder(
     localStream,
-    safeRoomId
+    safeRoomId,
+    meetingInfo?._id
   );
 
   const formatDuration = (secs: number) => {
@@ -311,19 +325,17 @@ export default function MeetingRoom() {
     }
   };
 
-  const handleLeave = async () => {
-    if (isRecording) {
-      stopRecording();
-    }
+  const performFinalLeave = async () => {
     localStream?.getTracks().forEach((track) => track.stop());
 
-    if ((wasRecorded || isRecording) && meetingInfo?._id) {
+    if (meetingInfo?._id) {
       try {
         await api.patch(`/meetings/${meetingInfo._id}/status`, {
-          hasRecording: true,
+          status: "completed",
+          ...(wasRecorded || isRecording ? { hasRecording: true } : {})
         });
       } catch (err) {
-        console.error("Failed to update recording status in database:", err);
+        console.error("Failed to update meeting status to completed in database:", err);
       }
     }
 
@@ -343,11 +355,30 @@ export default function MeetingRoom() {
         } catch (err) {
           console.error(err);
           alert("AI Analysis failed.");
+        } finally {
+          setAnalyzing(false);
         }
       }
     }
     navigate("/dashboard");
   };
+
+  const handleLeave = async () => {
+    if (isRecording) {
+      stopRecording();
+      setIsLeaving(true);
+    } else if (isUploading) {
+      setIsLeaving(true);
+    } else {
+      await performFinalLeave();
+    }
+  };
+
+  useEffect(() => {
+    if (isLeaving && !isRecording && !isUploading) {
+      performFinalLeave();
+    }
+  }, [isLeaving, isRecording, isUploading]);
 
   const handleSend = (e: React.FormEvent) => {
     e.preventDefault();
@@ -660,13 +691,22 @@ export default function MeetingRoom() {
         )}
       </div>
 
-      <Link
-        to="/dashboard"
-        onClick={() => localStream?.getTracks().forEach((track) => track.stop())}
-        className="absolute top-6 left-6 z-20 text-sm text-slate-400 hover:text-white"
+      <button
+        onClick={handleLeave}
+        className="absolute top-6 left-6 z-20 text-sm text-slate-400 hover:text-white flex items-center gap-1 font-semibold"
       >
-        ← Dashboard
-      </Link>
+        ← Leave Meeting
+      </button>
+
+      {isLeaving && (
+        <div className="fixed inset-0 bg-slate-900/90 backdrop-blur-md z-50 flex flex-col items-center justify-center text-white animate-fade-in">
+          <Loader2 className="w-12 h-12 animate-spin text-sky-500 mb-4" />
+          <h3 className="text-xl font-bold">Uploading Recording</h3>
+          <p className="text-slate-400 mt-2 text-sm max-w-xs text-center">
+            Saving your meeting recording to Cloudinary. Please don't close this window.
+          </p>
+        </div>
+      )}
     </div>
   );
 }

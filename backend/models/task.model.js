@@ -9,6 +9,11 @@ const taskSchema = new mongoose.Schema(
       enum: ["todo", "in_progress", "done"],
       default: "todo",
     },
+    priority: {
+      type: String,
+      enum: ["low", "medium", "high"],
+      default: "medium",
+    },
     assignee: { type: mongoose.Schema.Types.ObjectId, ref: "User" },
     createdBy: { type: mongoose.Schema.Types.ObjectId, ref: "User", required: true },
     meeting: { type: mongoose.Schema.Types.ObjectId, ref: "Meeting" },

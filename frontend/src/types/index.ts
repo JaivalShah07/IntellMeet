@@ -12,6 +12,7 @@ export interface Meeting {
   roomId: string;
   scheduledAt: string;
   durationMinutes?: number;
+  actualDurationMinutes?: number;
   type: string;
   status: string;
 
@@ -22,6 +23,8 @@ export interface Meeting {
   sentimentScore?: number;
   transcript?: string;
 
+  hasRecording?: boolean;
+  recordingUrl?: string;
   host?: {
     name: string;
     email: string;
@@ -33,6 +36,7 @@ export interface Task {
   title: string;
   description?: string;
   status: "todo" | "in_progress" | "done";
+  priority?: "low" | "medium" | "high";
   dueDate?: string;
 }
 

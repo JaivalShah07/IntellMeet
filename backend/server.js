@@ -60,6 +60,7 @@ async function start() {
   });
 
   app.use("/api/auth", authLimiter, authRoutes);
+  app.use("/api/upload", require("./routes/upload.routes"));
   app.use("/api/teams", require("./routes/team.routes"));
   app.use("/api/meetings", meetingRoutes);
   app.use("/api/tasks", taskRoutes);

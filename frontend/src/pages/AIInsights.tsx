@@ -1,5 +1,5 @@
-import { useEffect, useState } from "react";
-import { Brain, FileText, ListChecks, Sparkles, Loader2, Wand2, Download } from "lucide-react";
+import { useEffect, useState, useRef } from "react";
+import { Brain, FileText, ListChecks, Sparkles, Loader2, Wand2, Download, Upload } from "lucide-react";
 import PageHeader from "../components/ui/PageHeader";
 import api from "../lib/api";
 
@@ -18,6 +18,7 @@ export default function AIInsights() {
   >([]);
   const [analyzing, setAnalyzing] = useState(false);
   const [loading, setLoading] = useState(true);
+  const fileInputRef = useRef<HTMLInputElement>(null);
 
   useEffect(() => {
     api
@@ -26,11 +27,11 @@ export default function AIInsights() {
       .finally(() => setLoading(false));
   }, []);
 
-  const runAnalysis = async () => {
+  const runAnalysisForText = async (textToAnalyze: string) => {
     setAnalyzing(true);
     try {
       const { data } = await api.post("/ai/analyze", {
-        transcript,
+        transcript: textToAnalyze,
         meetingTitle: "Product Sync",
       });
       setSummary(data.summary);
@@ -43,6 +44,24 @@ export default function AIInsights() {
     } finally {
       setAnalyzing(false);
     }
+  };
+
+  const runAnalysis = () => runAnalysisForText(transcript);
+
+  const handleFileImport = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0];
+    if (!file) return;
+
+    const reader = new FileReader();
+    reader.onload = async (event) => {
+      const text = event.target?.result as string;
+      if (text) {
+        setTranscript(text);
+        await runAnalysisForText(text);
+      }
+    };
+    reader.readAsText(file);
+    e.target.value = "";
   };
 
   const exportTxtFile = (filename: string, content: string) => {
@@ -84,15 +103,20 @@ export default function AIInsights() {
           <div className="card-elevated rounded-2xl p-6">
             <div className="flex justify-between items-center mb-3">
               <h2 className="font-bold">Meeting transcript</h2>
-              {transcript && (
-                <button
-                  onClick={() => exportTxtFile("Meeting_Transcript.txt", transcript)}
-                  className="text-xs text-sky-600 hover:text-sky-700 flex items-center gap-1 font-semibold transition-colors"
-                  title="Export Transcript"
-                >
-                  <Download className="w-3.5 h-3.5" /> Export TXT
-                </button>
-              )}
+              <button
+                onClick={() => fileInputRef.current?.click()}
+                className="text-xs text-sky-600 hover:text-sky-700 flex items-center gap-1 font-semibold transition-colors"
+                title="Import Transcript"
+              >
+                <Upload className="w-3.5 h-3.5" /> Import TXT
+              </button>
+              <input
+                type="file"
+                ref={fileInputRef}
+                onChange={handleFileImport}
+                accept=".txt"
+                className="hidden"
+              />
             </div>
             <textarea
               value={transcript}

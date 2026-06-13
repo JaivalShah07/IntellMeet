@@ -351,10 +351,21 @@ export default function Dashboard() {
                       )}
                       
                       {m.hasRecording && (
-                        <div className="flex items-center gap-1 text-[10px] font-semibold text-indigo-500 dark:text-indigo-400">
+                        <a
+                          href={m.recordingUrl || "#"}
+                          target="_blank"
+                          rel="noopener noreferrer"
+                          className="flex items-center gap-1 text-[10px] font-semibold text-indigo-500 hover:text-indigo-600 dark:text-indigo-400 dark:hover:text-indigo-300 hover:underline cursor-pointer"
+                          onClick={(e) => {
+                            if (!m.recordingUrl) {
+                              e.preventDefault();
+                              alert("Recording is still processing or unavailable.");
+                            }
+                          }}
+                        >
                           <Play className="w-3.5 h-3.5 fill-indigo-500/20" />
-                          <span>Recorded</span>
-                        </div>
+                          <span>Watch Recording</span>
+                        </a>
                       )}
                     </div>
                   </div>

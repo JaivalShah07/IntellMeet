@@ -112,8 +112,8 @@ router.get("/", async (req, res, next) => {
       $or: [{ host: userId }, { participants: userId }],
       status: "completed",
     });
-    const totalMinutes = completedMeetings.reduce((acc, m) => acc + (m.durationMinutes || 60), 0);
-    const hoursCollaborated = Number((totalMinutes / 60).toFixed(1));
+    const totalMinutes = completedMeetings.reduce((acc, m) => acc + (m.actualDurationMinutes || m.durationMinutes || 60), 0);
+    const hoursCollaborated = Math.floor((totalMinutes / 60) * 100) / 100;
 
     res.json({
       success: true,
