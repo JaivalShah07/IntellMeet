@@ -57,6 +57,19 @@ export default function Login() {
     }
   };
 
+  const handleDemoLogin = async () => {
+    setError("");
+    setSubmitting(true);
+    try {
+      await login("demo@intellmeet.com", "demo123");
+      navigate("/dashboard", { replace: true });
+    } catch (err: unknown) {
+      setError("Demo login failed. Make sure your server is running.");
+    } finally {
+      setSubmitting(false);
+    }
+  };
+
   return (
     <AuthLayout
       title="Welcome back!"
@@ -72,10 +85,9 @@ export default function Login() {
         <div className="text-xs text-gray-600 dark:text-gray-400 bg-sky-50 dark:bg-sky-500/10 px-3 py-3 rounded-lg border border-sky-100 dark:border-sky-500/20 space-y-1">
           <p>
             <strong>Demo:</strong> demo@intellmeet.com / demo123
-          </p>
-          <p>
-            From project folder run <code className="text-sky-600">npm run dev</code> — database
-            starts automatically (no MongoDB install needed).
+            <p className="text-[15px]">
+              Press the "Enter as Guest/Judge button to bypass login."
+            </p>
           </p>
         </div>
 
@@ -116,7 +128,24 @@ export default function Login() {
             </>
           ) : (
             <>
-              Let&apos;s go <ArrowRight className="w-5 h-5" />
+              Sign In <ArrowRight className="w-5 h-5" />
+            </>
+          )}
+        </button>
+
+        <button
+          type="button"
+          onClick={handleDemoLogin}
+          disabled={submitting}
+          className="w-full py-4 rounded-xl font-bold inline-flex items-center justify-center gap-2 border border-sky-500/30 hover:border-sky-500/50 bg-sky-500/10 hover:bg-sky-500/20 text-sky-600 dark:text-sky-400 transition-all shadow-sm outline-none animate-pulse"
+        >
+          {submitting ? (
+            <>
+              <Loader2 className="w-5 h-5 animate-spin" /> Entering...
+            </>
+          ) : (
+            <>
+              Enter as Guest / Judge <ArrowRight className="w-5 h-5" />
             </>
           )}
         </button>
